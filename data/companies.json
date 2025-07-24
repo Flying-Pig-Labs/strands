@@ -1,0 +1,117 @@
+[
+  {
+    "id": "company_carmax",
+    "name": "CarMax",
+    "industry": "automotive_tech",
+    "size": "large",
+    "employee_count": 25000,
+    "headquarters": "12800 Tuckahoe Creek Pkwy, Richmond, VA 23238",
+    "tech_stack": [
+      "Java",
+      "Python",
+      "React",
+      "AWS",
+      "Kubernetes"
+    ],
+    "description": "Fortune 500 used car retailer with major tech operations",
+    "founded": 1993,
+    "careers_url": "https://careers.carmax.com",
+    "notable_projects": [
+      "Digital car buying platform",
+      "Mobile app development",
+      "Data analytics"
+    ]
+  },
+  {
+    "id": "company_capital_one",
+    "name": "Capital One",
+    "industry": "fintech",
+    "size": "large",
+    "employee_count": 50000,
+    "headquarters": "15000 Capital One Dr, Richmond, VA 23238",
+    "tech_stack": [
+      "Java",
+      "Python",
+      "Go",
+      "AWS",
+      "Machine Learning"
+    ],
+    "description": "Major financial services company with significant tech presence",
+    "founded": 1994,
+    "careers_url": "https://www.capitalonecareers.com",
+    "notable_projects": [
+      "Mobile banking",
+      "ML fraud detection",
+      "Cloud infrastructure"
+    ]
+  },
+  {
+    "id": "company_flying_pig_labs",
+    "name": "Flying Pig Labs",
+    "industry": "software_development",
+    "size": "small",
+    "employee_count": 15,
+    "headquarters": "Richmond, VA",
+    "tech_stack": [
+      "Ruby on Rails",
+      "JavaScript",
+      "React",
+      "PostgreSQL"
+    ],
+    "description": "Boutique software development consultancy",
+    "founded": 2010,
+    "website": "https://flyingpiglabs.com",
+    "notable_projects": [
+      "Custom web applications",
+      "E-commerce platforms",
+      "API development"
+    ]
+  },
+  {
+    "id": "company_dominion_energy",
+    "name": "Dominion Energy",
+    "industry": "energy_tech",
+    "size": "large",
+    "employee_count": 16000,
+    "headquarters": "120 Tredegar St, Richmond, VA 23219",
+    "tech_stack": [
+      "C#",
+      ".NET",
+      "SQL Server",
+      "Azure",
+      "IoT"
+    ],
+    "description": "Utility company with growing technology division",
+    "founded": 1983,
+    "careers_url": "https://careers.dominionenergy.com",
+    "notable_projects": [
+      "Smart grid technology",
+      "Renewable energy systems",
+      "Customer portal"
+    ]
+  },
+  {
+    "id": "company_willow_tree",
+    "name": "WillowTree",
+    "industry": "mobile_development",
+    "size": "medium",
+    "employee_count": 300,
+    "headquarters": "107 S West St, Charlottesville, VA 22902",
+    "richmond_office": "Richmond, VA",
+    "tech_stack": [
+      "Swift",
+      "Kotlin",
+      "React Native",
+      "Node.js",
+      "AWS"
+    ],
+    "description": "Leading mobile app development company with Richmond presence",
+    "founded": 2007,
+    "website": "https://willowtreeapps.com",
+    "notable_projects": [
+      "HBO Max mobile app",
+      "National Geographic apps",
+      "Enterprise mobile solutions"
+    ]
+  }
+]

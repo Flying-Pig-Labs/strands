@@ -1,0 +1,157 @@
+[
+  {
+    "id": "event_2f1d08f1",
+    "meetup_id": "meetup_rva_cloud_wranglers",
+    "meetup_name": "RVA Cloud Wranglers",
+    "title": "Serverless Architecture Best Practices",
+    "description": "Learn how to build scalable serverless applications on AWS Lambda",
+    "date": "2025-07-27T17:00:07.939501",
+    "start_time": "18:30",
+    "end_time": "20:00",
+    "venue_id": "venue_startup_va",
+    "venue_name": "Startup Virginia",
+    "venue_address": "1717 E Cary St, Richmond, VA 23223",
+    "speaker": "Alex Thompson",
+    "speaker_bio": "Senior Cloud Architect at Capital One",
+    "capacity": 150,
+    "registered": 67,
+    "status": "upcoming",
+    "tags": [
+      "AWS",
+      "Lambda",
+      "Serverless",
+      "Architecture"
+    ],
+    "requirements": [
+      "Laptop recommended",
+      "Basic programming knowledge"
+    ],
+    "cost": "Free",
+    "rsvp_url": "https://meetup.com/rva-cloud-wranglers/events/8b5e33e8",
+    "parking_info": "Street parking available, paid parking in nearby garages"
+  },
+  {
+    "id": "event_a4e094a8",
+    "meetup_id": "meetup_richmond_python",
+    "meetup_name": "Richmond Python User Group",
+    "title": "Building Machine Learning Pipelines with Python",
+    "description": "End-to-end ML pipeline development using scikit-learn and pandas",
+    "date": "2025-08-03T17:00:07.939501",
+    "start_time": "18:30",
+    "end_time": "20:30",
+    "venue_id": "venue_vcu_engineering",
+    "venue_name": "VCU School of Engineering",
+    "venue_address": "401 W Main St, Richmond, VA 23284",
+    "speaker": "Dr. Maria Santos",
+    "speaker_bio": "Lead Data Scientist at CarMax",
+    "capacity": 300,
+    "registered": 48,
+    "status": "upcoming",
+    "tags": [
+      "Python",
+      "Machine Learning",
+      "Data Science",
+      "MLOps"
+    ],
+    "requirements": [
+      "Laptop recommended",
+      "Basic programming knowledge"
+    ],
+    "cost": "Free",
+    "rsvp_url": "https://meetup.com/richmond-python-user-group/events/b57e7a14",
+    "parking_info": "Street parking available, paid parking in nearby garages"
+  },
+  {
+    "id": "event_d0f8806c",
+    "meetup_id": "meetup_rva_js",
+    "meetup_name": "RVA.js",
+    "title": "Modern React Patterns and Performance",
+    "description": "Advanced React techniques for building high-performance web apps",
+    "date": "2025-08-10T17:00:07.939501",
+    "start_time": "18:30",
+    "end_time": "20:00",
+    "venue_id": "venue_common_house",
+    "venue_name": "Common House",
+    "venue_address": "305 W Broad St, Richmond, VA 23220",
+    "speaker": "Jordan Liu",
+    "speaker_bio": "Senior Frontend Engineer at WillowTree",
+    "capacity": 200,
+    "registered": 42,
+    "status": "upcoming",
+    "tags": [
+      "React",
+      "JavaScript",
+      "Performance",
+      "Frontend"
+    ],
+    "requirements": [
+      "Laptop recommended",
+      "Basic programming knowledge"
+    ],
+    "cost": "Free",
+    "rsvp_url": "https://meetup.com/rva.js/events/edb705fd",
+    "parking_info": "Street parking available, paid parking in nearby garages"
+  },
+  {
+    "id": "event_fc5a0eae",
+    "meetup_id": "meetup_richmond_data_science",
+    "meetup_name": "Richmond Data Science Meetup",
+    "title": "Deep Learning for Computer Vision",
+    "description": "Practical applications of CNNs and transfer learning",
+    "date": "2025-08-17T17:00:07.939501",
+    "start_time": "18:30",
+    "end_time": "21:00",
+    "venue_id": "venue_vcu_engineering",
+    "venue_name": "VCU School of Engineering",
+    "venue_address": "401 W Main St, Richmond, VA 23284",
+    "speaker": "Dr. Rachel Green",
+    "speaker_bio": "Assistant Professor at VCU Engineering",
+    "capacity": 300,
+    "registered": 28,
+    "status": "upcoming",
+    "tags": [
+      "Deep Learning",
+      "Computer Vision",
+      "TensorFlow",
+      "AI"
+    ],
+    "requirements": [
+      "Laptop recommended",
+      "Basic programming knowledge"
+    ],
+    "cost": "Free",
+    "rsvp_url": "https://meetup.com/richmond-data-science-meetup/events/c737b03d",
+    "parking_info": "Street parking available, paid parking in nearby garages"
+  },
+  {
+    "id": "event_d55f8097",
+    "meetup_id": "meetup_rva_cybersecurity",
+    "meetup_name": "RVA Cybersecurity Guild",
+    "title": "Zero Trust Security Architecture",
+    "description": "Implementing zero trust principles in enterprise environments",
+    "date": "2025-08-24T17:00:07.939501",
+    "start_time": "18:30",
+    "end_time": "20:00",
+    "venue_id": "venue_startup_va",
+    "venue_name": "Startup Virginia",
+    "venue_address": "1717 E Cary St, Richmond, VA 23223",
+    "speaker": "Marcus Johnson",
+    "speaker_bio": "CISO at Dominion Energy",
+    "capacity": 150,
+    "registered": 33,
+    "status": "upcoming",
+    "tags": [
+      "Security",
+      "Zero Trust",
+      "Enterprise",
+      "Architecture"
+    ],
+    "requirements": [
+      "Laptop recommended",
+      "Basic programming knowledge"
+    ],
+    "cost": "Free",
+    "rsvp_url": "https://meetup.com/rva-cybersecurity-guild/events/446824d6",
+    "parking_info": "Street parking available, paid parking in nearby garages"
+  }
+]

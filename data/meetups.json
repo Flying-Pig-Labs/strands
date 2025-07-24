@@ -1,0 +1,118 @@
+[
+  {
+    "id": "meetup_rva_cloud_wranglers",
+    "name": "RVA Cloud Wranglers",
+    "category": "cloud_computing",
+    "description": "Richmond's premier cloud computing meetup focusing on AWS, Azure, and GCP",
+    "organizer": "Sarah Chen",
+    "organizer_company": "Capital One",
+    "member_count": 450,
+    "founded": "2019-03-15",
+    "meeting_frequency": "monthly",
+    "typical_venue": "venue_startup_va",
+    "focus_areas": [
+      "AWS",
+      "Azure",
+      "DevOps",
+      "Serverless",
+      "Containers"
+    ],
+    "social_links": {
+      "meetup": "https://meetup.com/rva-cloud-wranglers",
+      "slack": "rva-cloud-wranglers.slack.com",
+      "github": "https://github.com/rva-cloud-wranglers"
+    }
+  },
+  {
+    "id": "meetup_richmond_python",
+    "name": "Richmond Python User Group",
+    "category": "programming_language",
+    "description": "Python enthusiasts in the Richmond area sharing knowledge and projects",
+    "organizer": "Michael Rodriguez",
+    "organizer_company": "CarMax",
+    "member_count": 320,
+    "founded": "2017-09-20",
+    "meeting_frequency": "monthly",
+    "typical_venue": "venue_vcu_engineering",
+    "focus_areas": [
+      "Python",
+      "Data Science",
+      "Web Development",
+      "Machine Learning"
+    ],
+    "social_links": {
+      "meetup": "https://meetup.com/richmond-python",
+      "discord": "richmond-python",
+      "github": "https://github.com/richmond-python"
+    }
+  },
+  {
+    "id": "meetup_rva_js",
+    "name": "RVA.js",
+    "category": "programming_language",
+    "description": "JavaScript developers building the future of web applications",
+    "organizer": "Jessica Park",
+    "organizer_company": "WillowTree",
+    "member_count": 280,
+    "founded": "2018-01-12",
+    "meeting_frequency": "monthly",
+    "typical_venue": "venue_common_house",
+    "focus_areas": [
+      "JavaScript",
+      "React",
+      "Node.js",
+      "TypeScript",
+      "Full-stack"
+    ],
+    "social_links": {
+      "meetup": "https://meetup.com/rva-js",
+      "twitter": "@rvajs",
+      "discord": "rvajs"
+    }
+  },
+  {
+    "id": "meetup_richmond_data_science",
+    "name": "Richmond Data Science Meetup",
+    "category": "data_science",
+    "description": "Data scientists, analysts, and ML engineers sharing insights and techniques",
+    "organizer": "Dr. Amanda Johnson",
+    "organizer_company": "VCU",
+    "member_count": 190,
+    "founded": "2020-06-08",
+    "meeting_frequency": "monthly",
+    "typical_venue": "venue_vcu_engineering",
+    "focus_areas": [
+      "Machine Learning",
+      "Statistics",
+      "Python",
+      "R",
+      "Data Visualization"
+    ],
+    "social_links": {
+      "meetup": "https://meetup.com/richmond-data-science",
+      "linkedin": "richmond-data-science"
+    }
+  },
+  {
+    "id": "meetup_rva_cybersecurity",
+    "name": "RVA Cybersecurity Guild",
+    "category": "cybersecurity",
+    "description": "Information security professionals protecting Richmond's digital infrastructure",
+    "organizer": "David Kim",
+    "organizer_company": "Dominion Energy",
+    "member_count": 220,
+    "founded": "2019-11-03",
+    "meeting_frequency": "monthly",
+    "typical_venue": "venue_startup_va",
+    "focus_areas": [
+      "Network Security",
+      "Ethical Hacking",
+      "Compliance",
+      "Incident Response"
+    ],
+    "social_links": {
+      "meetup": "https://meetup.com/rva-cybersecurity",
+      "website": "https://rvacybersecurity.org"
+    }
+  }
+]

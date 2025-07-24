@@ -1,0 +1,1334 @@
+{
+ "Description": "Richmond MCP + Strands AI Agent Demo Infrastructure",
+ "Resources": {
+  "RichmondDataTableCE5F84D5": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "pk",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "sk",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "type",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "date",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "date-index",
+      "KeySchema": [
+       {
+        "AttributeName": "type",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "date",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "pk",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "sk",
+      "KeyType": "RANGE"
+     }
+    ],
+    "PointInTimeRecoverySpecification": {
+     "PointInTimeRecoveryEnabled": true
+    },
+    "SSESpecification": {
+     "SSEEnabled": true
+    },
+    "TableName": "richmond-tech-data",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/RichmondDataTable/Resource"
+   }
+  },
+  "ApiKeysSecret5A58C5CD": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "API keys for Strands demo (Claude, etc.)",
+    "GenerateSecretString": {
+     "ExcludeCharacters": "\"@/\\",
+     "GenerateStringKey": "temp_key",
+     "SecretStringTemplate": "{\"anthropic_api_key\":\"\",\"aws_bedrock_region\":\"us-east-1\"}"
+    },
+    "Name": "strands-demo/api-keys",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/ApiKeysSecret/Resource"
+   }
+  },
+  "LambdaExecutionRoleD5C26073": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "dynamodb:DeleteItem",
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:UpdateItem"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          {
+           "Fn::GetAtt": [
+            "RichmondDataTableCE5F84D5",
+            "Arn"
+           ]
+          },
+          {
+           "Fn::Join": [
+            "",
+            [
+             {
+              "Fn::GetAtt": [
+               "RichmondDataTableCE5F84D5",
+               "Arn"
+              ]
+             },
+             "/index/*"
+            ]
+           ]
+          }
+         ]
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "DynamoDbAccess"
+     },
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": "secretsmanager:GetSecretValue",
+         "Effect": "Allow",
+         "Resource": {
+          "Ref": "ApiKeysSecret5A58C5CD"
+         }
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "SecretsManagerAccess"
+     },
+     {
+      "PolicyDocument": {
+       "Statement": [
+        {
+         "Action": [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+         ],
+         "Effect": "Allow",
+         "Resource": [
+          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-*",
+          "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-v2*"
+         ]
+        }
+       ],
+       "Version": "2012-10-17"
+      },
+      "PolicyName": "BedrockAccess"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/LambdaExecutionRole/Resource"
+   }
+  },
+  "PythonDependenciesLayerE0D42248": {
+   "Type": "AWS::Lambda::LayerVersion",
+   "Properties": {
+    "CompatibleRuntimes": [
+     "python3.11"
+    ],
+    "Content": {
+     "S3Bucket": "cdk-hnb659fds-assets-418272766513-us-east-1",
+     "S3Key": "1ebc9d3ac2033816c4abb63e4afd69d350b4aba8704cc9236b82ea520b74f4b0.zip"
+    },
+    "Description": "Python dependencies for Strands and MCP",
+    "LayerName": "strands-mcp-dependencies"
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/PythonDependenciesLayer/Resource",
+    "aws:asset:path": "asset.1ebc9d3ac2033816c4abb63e4afd69d350b4aba8704cc9236b82ea520b74f4b0",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Content"
+   }
+  },
+  "AgentLambda7DC01917": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-418272766513-us-east-1",
+     "S3Key": "085bb1ecd41d04eaa4c772e2fbe29579504b0db6ae35e750f57105ac7dbf91a2.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DYNAMODB_TABLE_NAME": {
+       "Ref": "RichmondDataTableCE5F84D5"
+      },
+      "SECRETS_ARN": {
+       "Ref": "ApiKeysSecret5A58C5CD"
+      },
+      "REGION": "us-east-1",
+      "MCP_SERVER_COMMAND": "uvx awslabs.aws-dynamodb-mcp-server"
+     }
+    },
+    "Handler": "lambda_handler.handler",
+    "Layers": [
+     {
+      "Ref": "PythonDependenciesLayerE0D42248"
+     }
+    ],
+    "MemorySize": 1024,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaExecutionRoleD5C26073",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ],
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "LambdaExecutionRoleD5C26073"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/AgentLambda/Resource",
+    "aws:asset:path": "asset.085bb1ecd41d04eaa4c772e2fbe29579504b0db6ae35e750f57105ac7dbf91a2",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "AgentLambdaLogRetention6BA2E85C": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "AgentLambda7DC01917"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/AgentLambda/LogRetention/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteRetentionPolicy",
+        "logs:PutRetentionPolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "Roles": [
+     {
+      "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Handler": "index.handler",
+    "Runtime": "nodejs18.x",
+    "Timeout": 900,
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-418272766513-us-east-1",
+     "S3Key": "5bc602ecde93c947efe5899ae355f999986a1acbe610b1c0b9c468d738857555.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      "Arn"
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "DependsOn": [
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource",
+    "aws:asset:path": "asset.5bc602ecde93c947efe5899ae355f999986a1acbe610b1c0b9c468d738857555",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DataSeedLambda7B926813": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-418272766513-us-east-1",
+     "S3Key": "543ea9f51bc4420f6508e50e8dd7436923057bcdd46456eeafe1b7a71452b3c8.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "DYNAMODB_TABLE_NAME": {
+       "Ref": "RichmondDataTableCE5F84D5"
+      }
+     }
+    },
+    "Handler": "seed_data.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "LambdaExecutionRoleD5C26073",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.11",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ],
+    "Timeout": 120
+   },
+   "DependsOn": [
+    "LambdaExecutionRoleD5C26073"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/DataSeedLambda/Resource",
+    "aws:asset:path": "asset.543ea9f51bc4420f6508e50e8dd7436923057bcdd46456eeafe1b7a71452b3c8",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "DataSeedLambdaLogRetention61A0D6B0": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "DataSeedLambda7B926813"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/DataSeedLambda/LogRetention/Resource"
+   }
+  },
+  "StrandsDemoApiFDB494A0": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "API for Richmond MCP + Strands AI Agent Demo",
+    "Name": "Strands Richmond Demo API",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Resource"
+   }
+  },
+  "StrandsDemoApiCloudWatchRole1184B010": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/CloudWatchRole/Resource"
+   }
+  },
+  "StrandsDemoApiAccountD3735F86": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "StrandsDemoApiCloudWatchRole1184B010",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "StrandsDemoApiFDB494A0"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Account"
+   }
+  },
+  "StrandsDemoApiDeploymentCB5FDE3C1a0d0911f9ab20c60bd3dab276ddec18": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "API for Richmond MCP + Strands AI Agent Demo",
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "DependsOn": [
+    "StrandsDemoApiaskOPTIONSE6B2733C",
+    "StrandsDemoApiaskPOSTCBED358C",
+    "StrandsDemoApiask436C6762",
+    "StrandsDemoApihealthGETCAE1E66A",
+    "StrandsDemoApihealthOPTIONS28393EB6",
+    "StrandsDemoApihealth8D826908",
+    "StrandsDemoApiOPTIONSCAF45FBC",
+    "StrandsDemoApiseeddataOPTIONS7384480F",
+    "StrandsDemoApiseeddataPOST739D90B0",
+    "StrandsDemoApiseeddata87438A37"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Deployment/Resource"
+   }
+  },
+  "StrandsDemoApiDeploymentStageprodADB95CD9": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "StrandsDemoApiDeploymentCB5FDE3C1a0d0911f9ab20c60bd3dab276ddec18"
+    },
+    "MethodSettings": [
+     {
+      "DataTraceEnabled": true,
+      "HttpMethod": "*",
+      "LoggingLevel": "INFO",
+      "MetricsEnabled": true,
+      "ResourcePath": "/*"
+     }
+    ],
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    },
+    "StageName": "prod",
+    "Tags": [
+     {
+      "Key": "Environment",
+      "Value": "demo"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "CDK"
+     },
+     {
+      "Key": "Project",
+      "Value": "StrandsDemo"
+     }
+    ]
+   },
+   "DependsOn": [
+    "StrandsDemoApiAccountD3735F86"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/DeploymentStage.prod/Resource"
+   }
+  },
+  "StrandsDemoApiOPTIONSCAF45FBC": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "StrandsDemoApiFDB494A0",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/OPTIONS/Resource"
+   }
+  },
+  "StrandsDemoApiask436C6762": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "StrandsDemoApiFDB494A0",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "ask",
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/ask/Resource"
+   }
+  },
+  "StrandsDemoApiaskOPTIONSE6B2733C": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "StrandsDemoApiask436C6762"
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/ask/OPTIONS/Resource"
+   }
+  },
+  "StrandsDemoApiaskPOSTApiPermissionStrandsDemoStackStrandsDemoApiD9FF8B44POSTask45E9198B": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AgentLambda7DC01917",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:418272766513:",
+       {
+        "Ref": "StrandsDemoApiFDB494A0"
+       },
+       "/",
+       {
+        "Ref": "StrandsDemoApiDeploymentStageprodADB95CD9"
+       },
+       "/POST/ask"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/ask/POST/ApiPermission.StrandsDemoStackStrandsDemoApiD9FF8B44.POST..ask"
+   }
+  },
+  "StrandsDemoApiaskPOSTApiPermissionTestStrandsDemoStackStrandsDemoApiD9FF8B44POSTaskA6FC0021": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AgentLambda7DC01917",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:418272766513:",
+       {
+        "Ref": "StrandsDemoApiFDB494A0"
+       },
+       "/test-invoke-stage/POST/ask"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/ask/POST/ApiPermission.Test.StrandsDemoStackStrandsDemoApiD9FF8B44.POST..ask"
+   }
+  },
+  "StrandsDemoApiaskPOSTCBED358C": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "RequestTemplates": {
+      "application/json": "{ \"statusCode\": \"200\" }"
+     },
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "AgentLambda7DC01917",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "StrandsDemoApiask436C6762"
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/ask/POST/Resource"
+   }
+  },
+  "StrandsDemoApihealth8D826908": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "StrandsDemoApiFDB494A0",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "health",
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/health/Resource"
+   }
+  },
+  "StrandsDemoApihealthOPTIONS28393EB6": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "StrandsDemoApihealth8D826908"
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/health/OPTIONS/Resource"
+   }
+  },
+  "StrandsDemoApihealthGETApiPermissionStrandsDemoStackStrandsDemoApiD9FF8B44GEThealth7EB63B04": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AgentLambda7DC01917",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:418272766513:",
+       {
+        "Ref": "StrandsDemoApiFDB494A0"
+       },
+       "/",
+       {
+        "Ref": "StrandsDemoApiDeploymentStageprodADB95CD9"
+       },
+       "/GET/health"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/health/GET/ApiPermission.StrandsDemoStackStrandsDemoApiD9FF8B44.GET..health"
+   }
+  },
+  "StrandsDemoApihealthGETApiPermissionTestStrandsDemoStackStrandsDemoApiD9FF8B44GEThealthD0768175": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "AgentLambda7DC01917",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:418272766513:",
+       {
+        "Ref": "StrandsDemoApiFDB494A0"
+       },
+       "/test-invoke-stage/GET/health"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/health/GET/ApiPermission.Test.StrandsDemoStackStrandsDemoApiD9FF8B44.GET..health"
+   }
+  },
+  "StrandsDemoApihealthGETCAE1E66A": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "RequestTemplates": {
+      "application/json": "{ \"statusCode\": \"200\" }"
+     },
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "AgentLambda7DC01917",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "StrandsDemoApihealth8D826908"
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/health/GET/Resource"
+   }
+  },
+  "StrandsDemoApiseeddata87438A37": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "StrandsDemoApiFDB494A0",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "seed-data",
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/seed-data/Resource"
+   }
+  },
+  "StrandsDemoApiseeddataOPTIONS7384480F": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "StrandsDemoApiseeddata87438A37"
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/seed-data/OPTIONS/Resource"
+   }
+  },
+  "StrandsDemoApiseeddataPOSTApiPermissionStrandsDemoStackStrandsDemoApiD9FF8B44POSTseeddataA10B6AF9": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "DataSeedLambda7B926813",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:418272766513:",
+       {
+        "Ref": "StrandsDemoApiFDB494A0"
+       },
+       "/",
+       {
+        "Ref": "StrandsDemoApiDeploymentStageprodADB95CD9"
+       },
+       "/POST/seed-data"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/seed-data/POST/ApiPermission.StrandsDemoStackStrandsDemoApiD9FF8B44.POST..seed-data"
+   }
+  },
+  "StrandsDemoApiseeddataPOSTApiPermissionTestStrandsDemoStackStrandsDemoApiD9FF8B44POSTseeddataCAFE44A7": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "DataSeedLambda7B926813",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:aws:execute-api:us-east-1:418272766513:",
+       {
+        "Ref": "StrandsDemoApiFDB494A0"
+       },
+       "/test-invoke-stage/POST/seed-data"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/seed-data/POST/ApiPermission.Test.StrandsDemoStackStrandsDemoApiD9FF8B44.POST..seed-data"
+   }
+  },
+  "StrandsDemoApiseeddataPOST739D90B0": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "NONE",
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "DataSeedLambda7B926813",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "StrandsDemoApiseeddata87438A37"
+    },
+    "RestApiId": {
+     "Ref": "StrandsDemoApiFDB494A0"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/StrandsDemoApi/Default/seed-data/POST/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/1WPQU/DMAyFf8vumSnbieMG4jTE1CGuk5uakq1JqthhqqL+d5R0aOP0vpdnx/YKHqsKqgVeeKnb87I3DaSDoD4rvPAxtaND69sG0gc2PannL1dgUkw6kLBFhx0FSIfic8FMkzJoIdV+7iq6973RY7YzTapH27QIaYcjhU8KbLzL+T//Gp2Wa3DPewrWcC6ZFK+PyEzCsMmieA3bqM8kW2RSve8Ydr6rSciVdhxMh0IXHCHVxLIZTFnzhhutfXSiXmjo/WjJlePu3EGwK7fNUBP7GDSVgW8k377N4ZX+0uuQwtN0ey5b54+M6+5rMr9HGaJMyvmW4MQPP6sKHp9gvTixMcsQnRhLUM/6C6QnNgPSAQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "StrandsDemoStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "StrandsDemoApiEndpoint66B2C863": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "StrandsDemoApiFDB494A0"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "StrandsDemoApiDeploymentStageprodADB95CD9"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "ApiGatewayUrl": {
+   "Description": "API Gateway URL for the Strands demo",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "StrandsDemoApiFDB494A0"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "StrandsDemoApiDeploymentStageprodADB95CD9"
+      },
+      "/"
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "StrandsDemoApiUrl"
+   }
+  },
+  "DynamoDbTableName": {
+   "Description": "DynamoDB table name for Richmond data",
+   "Value": {
+    "Ref": "RichmondDataTableCE5F84D5"
+   },
+   "Export": {
+    "Name": "RichmondDataTableName"
+   }
+  },
+  "SecretsManagerArn": {
+   "Description": "Secrets Manager ARN for API keys",
+   "Value": {
+    "Ref": "ApiKeysSecret5A58C5CD"
+   },
+   "Export": {
+    "Name": "ApiKeysSecretArn"
+   }
+  },
+  "LambdaFunctionName": {
+   "Description": "Lambda function name for the AI agent",
+   "Value": {
+    "Ref": "AgentLambda7DC01917"
+   },
+   "Export": {
+    "Name": "AgentLambdaName"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
