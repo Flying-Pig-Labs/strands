@@ -3,8 +3,9 @@ boto3>=1.34.0               # AWS SDK for Python
 botocore>=1.34.0            # AWS core functionality
 
 # Strands SDK and MCP
-strands-ai>=0.1.0           # Strands AI agent framework
-mcp>=1.0.0                  # Model Context Protocol
+strands-agents>=1.1.0         # Official Strands AI agent framework
+strands-agents-tools>=0.1.7   # Pre-built tools for Strands agents
+mcp[cli]>=1.4.0              # Model Context Protocol with CLI support
 
 # Claude/Anthropic API
 anthropic>=0.8.0            # Anthropic Claude API client
@@ -34,3 +35,7 @@ mangum>=0.17.0              # ASGI adapter for Lambda
 # JSON and data handling
 ujson>=5.8.0                # Fast JSON parsing
 orjson>=3.9.0               # Fast JSON serialization
+
+# HTTP and CLI interface
+httpx>=0.25.0               # Modern HTTP client
+rich>=13.0.0                # Rich terminal output

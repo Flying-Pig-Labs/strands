@@ -269,12 +269,12 @@ async def process_local_query(query: str, context: Dict[str, Any]) -> Dict[str, 
     try:
         config = RichmondAgentConfig()
         agent = RichmondAgent(config)
-        await agent.initialize()
+        agent.initialize()  # Not async
         
         request = QueryRequest(query=query, context=context)
-        response = await agent.process_query(request)
+        response = agent.process_query(request)  # Not async
         
-        await agent.cleanup()
+        agent.cleanup()  # Not async
         return response.model_dump()
         
     except Exception as e:
@@ -309,10 +309,10 @@ async def check_local_health() -> Dict[str, Any]:
     try:
         config = RichmondAgentConfig()
         agent = RichmondAgent(config)
-        await agent.initialize()
+        agent.initialize()  # Not async
         
-        health = await agent.health_check()
-        await agent.cleanup()
+        health = agent.health_check()  # Not async
+        agent.cleanup()  # Not async
         return health
         
     except Exception as e:

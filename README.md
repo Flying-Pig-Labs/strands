@@ -35,35 +35,79 @@
 
 ### 🔧 Prerequisites
 - 🐍 **Python 3.8+**
-- ☁️ **AWS CLI** configured
-- 🛠️ **SAM CLI** installed  
+- ☁️ **AWS CLI** configured (optional)
+- 🛠️ **SAM CLI** installed (optional)
 - 🔑 **Anthropic API key**
 
 </td>
 <td width="50%">
 
-### ⚡ 1-Minute Setup
+### ⚡ 30-Second Setup
 ```bash
-# Clone and setup
+# Clone the repository
 git clone <repository-url>
 cd strands
-python setup.py
 
-# Set your API key
-export ANTHROPIC_API_KEY="your-key-here"
+# 🌟 ONE COMMAND INSTALL
+make install
 
-# Test locally
-python test_local.py
-
-# Deploy to AWS
-./deploy.sh --stage dev --api-key $ANTHROPIC_API_KEY
+# That's it! Follow the prompts
 ```
 
 </td>
 </tr>
 </table>
 
-> **✨ Pro Tip:** Run `python setup.py` for automated dependency installation and environment validation!
+> **✨ NEW:** Just run `make install` and it does EVERYTHING for you - checks prerequisites, creates virtual environment, installs dependencies, validates setup, and runs tests!
+
+### 🎯 Alternative Quick Start Options
+
+<table>
+<tr>
+<td width="33%">
+
+**Automated Script**
+```bash
+# For non-make systems
+./quickstart-install.sh
+```
+
+</td>
+<td width="33%">
+
+**Traditional Setup**
+```bash
+# Manual setup
+python setup.py
+```
+
+</td>
+<td width="33%">
+
+**Full Deploy**
+```bash
+# Setup + Deploy
+make all
+```
+
+</td>
+</tr>
+</table>
+
+## 🎉 What `make install` Does For You
+
+The new `make install` command is a complete one-stop setup that:
+
+1. **🔍 Checks Prerequisites** - Verifies Python 3.8+, AWS CLI, and SAM CLI
+2. **🐍 Creates Virtual Environment** - Sets up an isolated Python environment
+3. **📦 Installs All Dependencies** - Installs 30+ packages including Strands SDK
+4. **🔐 Sets Up Environment** - Creates .env.template with all needed variables
+5. **📊 Loads Sample Data** - Pre-loads Richmond tech community data
+6. **✔️ Validates Setup** - Runs comprehensive validation checks
+7. **🧪 Runs Tests** - Executes local tests to ensure everything works
+8. **📝 Creates Quick Start Guide** - Generates a handy reference script
+
+All in about **2-3 minutes**! No more manual setup steps or missing dependencies.
 
 ## 🏗️ Architecture
 

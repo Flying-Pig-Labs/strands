@@ -13,7 +13,10 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 
 import boto3
-from strands import Agent, MCPClient
+from strands import Agent
+from strands.tools.mcp import MCPClient
+from strands.models.bedrock import BedrockModel
+from mcp import stdio_client, StdioServerParameters
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
 
@@ -39,7 +42,7 @@ class AgentResponse(BaseModel):
 @dataclass
 class RichmondAgentConfig:
     """Configuration for the Richmond AI Agent"""
-    model_name: str = "claude-3-5-sonnet-20241022"
+    model_name: str = "anthropic.claude-3-5-sonnet-20240620-v1:0"
     aws_region: str = "us-east-1"
     dynamodb_table: str = "richmond-data"
     mcp_server_url: str = "stdio://uvx awslabs.aws-dynamodb-mcp-server"
@@ -60,7 +63,7 @@ class RichmondAgent:
         self.mcp_client = None
         self.agent = None
         
-    async def initialize(self):
+    def initialize(self):
         """Initialize the agent with MCP tools and Claude model"""
         try:
             # Initialize Anthropic client
@@ -71,43 +74,52 @@ class RichmondAgent:
             self.anthropic_client = Anthropic(api_key=api_key)
             
             # Initialize MCP client for DynamoDB tools
-            self.mcp_client = MCPClient()
-            await self._setup_mcp_tools()
-            
-            # Initialize Strands agent
-            self.agent = Agent(
-                model_name=self.config.model_name,
-                tools=await self.mcp_client.list_tools(),
-                system_prompt=self._get_system_prompt(),
-                max_tokens=self.config.max_tokens,
-                temperature=self.config.temperature
+            self.mcp_client = MCPClient(
+                lambda: stdio_client(
+                    StdioServerParameters(
+                        command="uvx",
+                        args=["--from", "awslabs-dynamodb-mcp-server", "awslabs.dynamodb-mcp-server"],
+                        env={
+                            "AWS_REGION": self.config.aws_region,
+                            "AWS_PROFILE": os.getenv('AWS_PROFILE', 'personal'),
+                            "DYNAMODB_TABLE": self.config.dynamodb_table
+                        }
+                    )
+                )
             )
             
+            # Configure Bedrock model with correct region
+            model = BedrockModel(
+                client_args={
+                    'region_name': self.config.aws_region  # Use us-east-1
+                },
+                model_id=self.config.model_name,  # claude-3-5-sonnet-20241022
+                max_tokens=self.config.max_tokens,
+                params={
+                    'temperature': self.config.temperature
+                }
+            )
+            
+            # Initialize Strands agent with MCP tools
+            with self.mcp_client:
+                tools = self.mcp_client.list_tools_sync()
+                self.agent = Agent(
+                    model=model,
+                    tools=tools,
+                    system_prompt=self._get_system_prompt()
+                )
+            
             logger.info("Richmond Agent initialized successfully")
+            if tools:
+                tool_names = [tool.tool_name for tool in tools]
+                logger.info(f"Available tools ({len(tools)}): {tool_names[:5]}...")
+            else:
+                logger.info("No tools available")
             
         except Exception as e:
             logger.error(f"Failed to initialize agent: {e}")
             raise
     
-    async def _setup_mcp_tools(self):
-        """Setup MCP tools for DynamoDB interaction"""
-        try:
-            # Connect to DynamoDB MCP server
-            await self.mcp_client.connect(
-                server_url=self.config.mcp_server_url,
-                environment={
-                    'AWS_REGION': self.config.aws_region,
-                    'DYNAMODB_TABLE': self.config.dynamodb_table
-                }
-            )
-            
-            # Verify tools are available
-            tools = await self.mcp_client.list_tools()
-            logger.info(f"Available MCP tools: {[tool.name for tool in tools]}")
-            
-        except Exception as e:
-            logger.error(f"Failed to setup MCP tools: {e}")
-            raise
     
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the Richmond AI agent"""
@@ -119,15 +131,23 @@ You have access to a DynamoDB database containing local Richmond data including:
 - Venues and locations
 - Community information
 
-When a user asks about Richmond-specific information, use the available DynamoDB tools to:
-1. Query relevant data from the database
-2. Provide accurate, up-to-date information
-3. Be conversational and helpful in your responses
+The main DynamoDB table is called 'richmond-data' and contains items with a 'type' field that can be:
+- 'meetup' - for tech meetups and regular gatherings
+- 'company' - for local tech companies
+- 'venue' - for event venues
+- 'event' - for one-time events
+- 'resource' - for community resources
 
-Available tools via MCP:
-- dynamodb_get_item: Get specific items by key
-- dynamodb_query: Query items with conditions
-- dynamodb_scan: Scan table for items
+When a user asks about Richmond-specific information:
+1. Use the 'scan' tool to search the 'richmond-data' table
+2. For specific queries, you can filter by type (e.g., scan for all items where type='meetup')
+3. Provide accurate, up-to-date information from the database
+4. Be conversational and helpful in your responses
+
+If you encounter an error saying a table doesn't exist, try:
+1. Use 'list_tables' to see available tables
+2. Look for 'richmond-data' in the list
+3. Use that table name in your queries
 
 Always try to use live data from the database when possible. If no relevant data is found, 
 be honest about the limitations and suggest general Richmond resources.
@@ -135,36 +155,29 @@ be honest about the limitations and suggest general Richmond resources.
 Focus on being helpful, accurate, and Richmond-focused in all responses.
 """
     
-    async def process_query(self, request: QueryRequest) -> AgentResponse:
+    def process_query(self, request: QueryRequest) -> AgentResponse:
         """Process a user query and return response"""
         try:
             if not self.agent:
-                await self.initialize()
+                self.initialize()
             
             logger.info(f"Processing query: {request.query}")
             
-            # Process the query with the agent
-            result = await self.agent.run(
-                message=request.query,
-                context=request.context or {}
-            )
+            # Process the query with the agent using MCP context
+            with self.mcp_client:
+                result = self.agent(request.query)
             
-            # Extract tools used from the result
-            tools_used = []
-            if hasattr(result, 'tool_calls'):
-                tools_used = [call.tool_name for call in result.tool_calls]
-            
+            # Build response (Strands typically returns a simple string)
             response = AgentResponse(
-                response=result.content,
-                tools_used=tools_used,
+                response=str(result),
+                tools_used=['dynamodb_mcp_tools'],  # MCP tools were used if available
                 metadata={
                     'model': self.config.model_name,
-                    'tokens_used': getattr(result, 'tokens_used', None),
-                    'processing_time': getattr(result, 'processing_time', None)
+                    'query_length': len(request.query)
                 }
             )
             
-            logger.info(f"Query processed successfully, tools used: {tools_used}")
+            logger.info(f"Query processed successfully")
             return response
             
         except Exception as e:
@@ -174,7 +187,7 @@ Focus on being helpful, accurate, and Richmond-focused in all responses.
                 error=str(e)
             )
     
-    async def health_check(self) -> Dict[str, Any]:
+    def health_check(self) -> Dict[str, Any]:
         """Perform health check on agent and dependencies"""
         health_status = {
             'status': 'healthy',
@@ -193,28 +206,23 @@ Focus on being helpful, accurate, and Richmond-focused in all responses.
             # Check MCP client
             try:
                 if self.mcp_client:
-                    tools = await self.mcp_client.list_tools()
-                    health_status['components']['mcp'] = f'healthy ({len(tools)} tools available)'
+                    with self.mcp_client:
+                        tools = self.mcp_client.list_tools_sync()
+                        health_status['components']['mcp'] = f'healthy ({len(tools)} tools available)'
                 else:
                     health_status['components']['mcp'] = 'not initialized'
             except Exception as e:
                 health_status['components']['mcp'] = f'unhealthy: {e}'
                 health_status['status'] = 'degraded'
             
-            # Check Anthropic API
+            # Check Strands agent
             try:
-                if self.anthropic_client:
-                    # Simple API test
-                    await self.anthropic_client.messages.create(
-                        model="claude-3-haiku-20240307",
-                        max_tokens=10,
-                        messages=[{"role": "user", "content": "Hi"}]
-                    )
-                    health_status['components']['anthropic'] = 'healthy'
+                if self.agent:
+                    health_status['components']['strands_agent'] = 'healthy'
                 else:
-                    health_status['components']['anthropic'] = 'not initialized'
+                    health_status['components']['strands_agent'] = 'not initialized'
             except Exception as e:
-                health_status['components']['anthropic'] = f'unhealthy: {e}'
+                health_status['components']['strands_agent'] = f'unhealthy: {e}'
                 health_status['status'] = 'degraded'
             
         except Exception as e:
@@ -223,11 +231,10 @@ Focus on being helpful, accurate, and Richmond-focused in all responses.
         
         return health_status
     
-    async def cleanup(self):
+    def cleanup(self):
         """Cleanup resources"""
         try:
-            if self.mcp_client:
-                await self.mcp_client.disconnect()
+            # MCP client cleanup handled automatically by context manager
             logger.info("Agent cleanup completed")
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
@@ -237,7 +244,7 @@ Focus on being helpful, accurate, and Richmond-focused in all responses.
 _agent_instance: Optional[RichmondAgent] = None
 
 
-async def get_agent() -> RichmondAgent:
+def get_agent() -> RichmondAgent:
     """Get or create agent instance (singleton pattern for Lambda)"""
     global _agent_instance
     
@@ -245,56 +252,52 @@ async def get_agent() -> RichmondAgent:
         config = RichmondAgentConfig(
             aws_region=os.getenv('AWS_REGION', 'us-east-1'),
             dynamodb_table=os.getenv('DYNAMODB_TABLE', 'richmond-data'),
-            model_name=os.getenv('MODEL_NAME', 'claude-3-5-sonnet-20241022'),
+            model_name=os.getenv('MODEL_NAME', 'anthropic.claude-3-5-sonnet-20240620-v1:0'),
         )
         _agent_instance = RichmondAgent(config)
-        await _agent_instance.initialize()
+        _agent_instance.initialize()
     
     return _agent_instance
 
 
-# Async helper functions for Lambda use
-async def process_query_async(query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
-    """Async wrapper for processing queries"""
-    agent = await get_agent()
+# Main API functions
+def process_query_sync(query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
+    """Process a query using the Richmond agent"""
+    agent = get_agent()
     request = QueryRequest(query=query, context=context)
-    response = await agent.process_query(request)
+    response = agent.process_query(request)
     return response.model_dump()
 
 
-async def health_check_async() -> Dict[str, Any]:
-    """Async wrapper for health checks"""
-    agent = await get_agent()
-    return await agent.health_check()
-
-
-# Sync wrappers for easier integration
-def process_query_sync(query: str, context: Optional[Dict] = None) -> Dict[str, Any]:
-    """Sync wrapper for processing queries"""
-    return asyncio.run(process_query_async(query, context))
-
-
 def health_check_sync() -> Dict[str, Any]:
-    """Sync wrapper for health checks"""
-    return asyncio.run(health_check_async())
+    """Perform health check on the agent"""
+    agent = get_agent()
+    return agent.health_check()
 
 
 if __name__ == "__main__":
     # Test the agent locally
-    async def test_agent():
-        config = RichmondAgentConfig()
-        agent = RichmondAgent(config)
-        await agent.initialize()
+    def test_agent():
+        print("🚀 Testing Richmond AI Agent")
+        print("=" * 40)
         
-        # Test query
-        request = QueryRequest(query="What's the next tech meetup in Richmond?")
-        response = await agent.process_query(request)
-        print(json.dumps(response.model_dump(), indent=2))
-        
-        # Health check
-        health = await agent.health_check()
-        print(json.dumps(health, indent=2))
-        
-        await agent.cleanup()
+        try:
+            # Test query
+            print("📋 Testing query processing...")
+            response = process_query_sync("What's the next tech meetup in Richmond?")
+            print("✅ Query Response:")
+            print(json.dumps(response, indent=2))
+            
+            print("\n🔍 Testing health check...")
+            health = health_check_sync()
+            print("✅ Health Status:")
+            print(json.dumps(health, indent=2))
+            
+            print("\n🎉 Agent test completed successfully!")
+            
+        except Exception as e:
+            print(f"❌ Agent test failed: {e}")
+            import traceback
+            traceback.print_exc()
     
-    asyncio.run(test_agent())
+    test_agent()

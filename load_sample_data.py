@@ -238,7 +238,7 @@ def load_data_to_dynamodb(table_name: str, data: List[Dict[str, Any]]) -> Dict[s
     """Load data into DynamoDB table"""
     
     try:
-        dynamodb = boto3.resource('dynamodb')
+        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
         table = dynamodb.Table(table_name)
         
         # Batch write items
@@ -324,7 +324,7 @@ if __name__ == "__main__":
     import os
     
     # Load environment variables
-    table_name = os.getenv('DYNAMODB_TABLE', 'richmond-data-dev')
+    table_name = os.getenv('DYNAMODB_TABLE', 'richmond-data')
     
     print(f"Loading sample data to table: {table_name}")
     

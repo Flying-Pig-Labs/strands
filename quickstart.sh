@@ -1,0 +1,20 @@
+#!/bin/bash
+# Strands Richmond AI Agent - Quick Start Guide
+
+echo '🚀 Strands Richmond AI Agent - Quick Start'
+echo '========================================='
+echo ''
+echo '1️⃣  Activate virtual environment:'
+echo '    source .venv/bin/activate'
+echo ''
+echo '2️⃣  Set API key:'
+echo '    export ANTHROPIC_API_KEY="your-key-here"'
+echo ''
+echo '3️⃣  Test locally:'
+echo '    python cli.py ask "What tech meetups are in Richmond?"'
+echo ''
+echo '4️⃣  Deploy to AWS:'
+echo '    make deploy'
+echo ''
+echo '📚 Full documentation: README.md'
+echo '🆘 Help: python cli.py --help'
