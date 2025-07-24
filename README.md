@@ -1,20 +1,48 @@
-# Richmond AI Agent - MCP + Strands Demo
+<div align="center">
 
-A working demonstration of an AI agent using the **Model Context Protocol (MCP)** and **Strands SDK** to query live data from **Amazon DynamoDB**, powered by **Claude 3**, and deployed on **AWS Lambda + API Gateway**. The demo is tailored to **Richmond, VA** and showcases how modern AI agents interact with tools and data securely and modularly.
+# 🏛️ Richmond AI Agent
+### *Intelligent Local Tech Community Assistant*
 
-[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![AWS](https://img.shields.io/badge/AWS-Lambda%20%7C%20API%20Gateway%20%7C%20DynamoDB-orange.svg)](https://aws.amazon.com/)
-[![Claude](https://img.shields.io/badge/Claude-3.5%20Sonnet-purple.svg)](https://www.anthropic.com/claude)
+<p align="center">
+  <em>A sophisticated AI agent demonstration using the <strong>Model Context Protocol (MCP)</strong> and <strong>Strands SDK</strong><br/>
+  to deliver intelligent, context-aware responses about Richmond's vibrant tech ecosystem</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/AWS-Lambda_|_API_Gateway_|_DynamoDB-FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS" />
+  <img src="https://img.shields.io/badge/Claude-3.5_Sonnet-8B5CF6.svg?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude" />
+  <img src="https://img.shields.io/badge/Richmond-VA_Tech_Hub-DC143C.svg?style=for-the-badge&logo=location&logoColor=white" alt="Richmond" />
+</p>
+
+<p align="center">
+  <a href="#-quick-start">🚀 Quick Start</a> •
+  <a href="#-architecture">🏗️ Architecture</a> •
+  <a href="#-demo-scenario">📋 Demo</a> •
+  <a href="#-deployment">🚀 Deploy</a> •
+  <a href="#-usage">🖥️ Usage</a>
+</p>
+
+---
+
+</div>
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Python 3.8+
-- AWS CLI configured
-- SAM CLI installed
-- Anthropic API key
+<table>
+<tr>
+<td width="50%">
 
-### 1-Minute Setup
+### 🔧 Prerequisites
+- 🐍 **Python 3.8+**
+- ☁️ **AWS CLI** configured
+- 🛠️ **SAM CLI** installed  
+- 🔑 **Anthropic API key**
+
+</td>
+<td width="50%">
+
+### ⚡ 1-Minute Setup
 ```bash
 # Clone and setup
 git clone <repository-url>
@@ -31,52 +59,190 @@ python test_local.py
 ./deploy.sh --stage dev --api-key $ANTHROPIC_API_KEY
 ```
 
+</td>
+</tr>
+</table>
+
+> **✨ Pro Tip:** Run `python setup.py` for automated dependency installation and environment validation!
+
 ## 🏗️ Architecture
 
-### End-to-End Agent Flow
+<div align="center">
+
+### 🔄 End-to-End Agent Flow
+
+```mermaid
+graph LR
+    A[👤 User Query] --> B[🌐 API Gateway]
+    B --> C[⚡ Lambda Agent]
+    C --> D[🧠 Claude 3.5]
+    D --> E[🔧 MCP Tools]
+    E --> F[🗄️ DynamoDB]
+    F --> G[📊 Live Data]
+    G --> H[💬 Response]
+    
+    style A fill:#e1f5fe
+    style D fill:#f3e5f5
+    style F fill:#fff3e0
+    style H fill:#e8f5e8
 ```
-User Query → API Gateway → Lambda (Agent) → Claude 3 → MCP Tools → DynamoDB → Response
-```
 
-1. **User** submits query via API or CLI
-2. **API Gateway** routes to Lambda function
-3. **Agent** (running in Lambda) processes the query
-4. **Claude 3** reasons about the request via Anthropic API
-5. **MCP Tools** dynamically query DynamoDB when needed
-6. **DynamoDB** returns live Richmond data
-7. **Agent** generates final response
+</div>
 
-### Key Components
+<details>
+<summary><strong>🔍 Detailed Flow Breakdown</strong></summary>
 
-- **🤖 Agent (`agent.py`)**: Strands-powered AI agent with MCP integration
-- **⚡ Lambda Handler (`lambda_handler.py`)**: AWS Lambda API integration
-- **🖥️ CLI (`cli.py`)**: Command-line interface with Rich formatting
-- **📊 Sample Data (`load_sample_data.py`)**: Richmond tech community data
-- **🏗️ Infrastructure (`template.yaml`)**: SAM CloudFormation template
+1. **👤 User** submits query via API or CLI
+2. **🌐 API Gateway** routes to Lambda function
+3. **⚡ Agent** (running in Lambda) processes the query
+4. **🧠 Claude 3** reasons about the request via Anthropic API
+5. **🔧 MCP Tools** dynamically query DynamoDB when needed
+6. **🗄️ DynamoDB** returns live Richmond data
+7. **💬 Agent** generates final response
+
+</details>
+
+### 🧩 Key Components
+
+<div align="center">
+<table>
+<tr>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/96/artificial-intelligence.png" width="64" height="64"/>
+  <br/><strong>Agent</strong>
+  <br/><code>agent.py</code>
+  <br/><small>Strands-powered AI agent with MCP integration</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/96/amazon-web-services.png" width="64" height="64"/>
+  <br/><strong>Lambda Handler</strong>
+  <br/><code>lambda_handler.py</code>
+  <br/><small>AWS Lambda API integration</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/96/console.png" width="64" height="64"/>
+  <br/><strong>CLI</strong>
+  <br/><code>cli.py</code>
+  <br/><small>Command-line interface with Rich formatting</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/96/database.png" width="64" height="64"/>
+  <br/><strong>Sample Data</strong>
+  <br/><code>load_sample_data.py</code>
+  <br/><small>Richmond tech community data</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/96/cloud-infrastructure.png" width="64" height="64"/>
+  <br/><strong>Infrastructure</strong>
+  <br/><code>template.yaml</code>
+  <br/><small>SAM CloudFormation template</small>
+</td>
+</tr>
+</table>
+</div>
 
 ## 📋 Demo Scenario
 
-**Query**: "What's the next tech meetup happening in Richmond?"
+<div align="center">
 
-**Expected Flow**:
-- Claude identifies need for external data
-- Calls MCP tool `dynamodb_query` 
-- Receives meetup data from DynamoDB
-- **Response**: "The next Richmond tech meetup is RVA Cloud Wranglers on July 31st at Common House."
+### 🎭 Live Demo Experience
+
+<table>
+<tr>
+<td width="50%">
+
+**💬 Sample Query**
+```
+"What's the next tech meetup happening in Richmond?"
+```
+
+**🔄 Expected Flow**
+1. 🧠 Claude identifies need for external data
+2. 🔧 Calls MCP tool `dynamodb_query` 
+3. 📊 Receives meetup data from DynamoDB
+4. 💬 Generates contextual response
+
+</td>
+<td width="50%">
+
+**✨ Sample Response**
+```json
+{
+  "response": "The next Richmond tech meetup is 
+  RVA Cloud Wranglers on July 31st at 
+  Common House. It's focused on AWS 
+  best practices and starts at 6:30 PM.",
+  
+  "tools_used": ["dynamodb_query"],
+  "confidence": 0.95
+}
+```
+
+</td>
+</tr>
+</table>
+
+</div>
+
+---
+
+<div align="center">
+  
+### 🎯 Try These Sample Queries
+
+| Category | Query | Expected Tool |
+|----------|-------|---------------|
+| 📅 **Events** | *"What's happening this week?"* | `dynamodb_query` |
+| 🏢 **Companies** | *"Tell me about Capital One's tech stack"* | `dynamodb_query` |
+| 📍 **Venues** | *"Where can I host a developer event?"* | `dynamodb_query` |
+| 🐍 **Languages** | *"Any Python meetups in Richmond?"* | `dynamodb_query` |
+| 💼 **Jobs** | *"Who are the major tech employers?"* | `dynamodb_query` |
+
+</div>
 
 ## 🔧 Installation & Setup
 
-### Automated Setup
+<div align="center">
+
+### 🤖 Automated Setup (Recommended)
+
+</div>
+
 ```bash
 python setup.py
 ```
 
-This script will:
-- ✅ Check prerequisites (Python, AWS CLI, SAM CLI)
-- 📦 Install dependencies in virtual environment
-- 🔐 Check environment variables
-- 📝 Create `.env` template
-- 🧪 Optionally run local tests
+<div align="center">
+<table>
+<tr>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/48/checkmark.png"/>
+  <br/>**Prerequisites Check**
+  <br/><small>Python, AWS CLI, SAM CLI</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/48/package.png"/>
+  <br/>**Dependencies**
+  <br/><small>Virtual environment setup</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/48/key.png"/>
+  <br/>**Environment**
+  <br/><small>API keys validation</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/48/file.png"/>
+  <br/>**Configuration**
+  <br/><small>Create .env template</small>
+</td>
+<td align="center" width="20%">
+  <img src="https://img.icons8.com/color/48/test-tube.png"/>
+  <br/>**Testing**
+  <br/><small>Optional local tests</small>
+</td>
+</tr>
+</table>
+</div>
 
 ### Manual Setup
 
@@ -185,25 +351,108 @@ curl https://your-api-gateway-url.amazonaws.com/prod/health
 
 ## 📊 Sample Data
 
-The agent comes pre-loaded with Richmond tech community data:
+<div align="center">
+  <em>🏛️ Comprehensive Richmond tech ecosystem data, carefully curated for intelligent responses</em>
+</div>
+
+---
+
+<div align="center">
 
 ### 🤝 Meetups & Events
-- **RVA Cloud Wranglers** - AWS & Cloud Computing
-- **Richmond Python User Group** - Python Development  
-- **Data Science RVA** - Analytics & ML
-- **RVA DevOps** - Infrastructure & Automation
+
+<table>
+<tr>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/cloud.png"/>
+  <br/><strong>RVA Cloud Wranglers</strong>
+  <br/><small>AWS & Cloud Computing</small>
+  <br/><code>Monthly • 50+ members</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/python.png"/>
+  <br/><strong>Richmond Python UG</strong>
+  <br/><small>Python Development</small>
+  <br/><code>Bi-weekly • 120+ members</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/data-science.png"/>
+  <br/><strong>Data Science RVA</strong>
+  <br/><small>Analytics & ML</small>
+  <br/><code>Monthly • 200+ members</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/docker.png"/>
+  <br/><strong>RVA DevOps</strong>
+  <br/><small>Infrastructure & Automation</small>
+  <br/><code>Monthly • 85+ members</code>
+</td>
+</tr>
+</table>
 
 ### 🏢 Companies
-- **Capital One** - Fintech & Digital Banking
-- **CarMax** - Automotive Retail Technology
-- **Flying Pig Labs** - Software Development
-- **Hourly** - HR Technology Platform
+
+<table>
+<tr>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/bank-cards.png"/>
+  <br/><strong>Capital One</strong>
+  <br/><small>Fintech & Digital Banking</small>
+  <br/><code>5,000+ tech employees</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/car.png"/>
+  <br/><strong>CarMax</strong>
+  <br/><small>Automotive Retail Technology</small>
+  <br/><code>800+ tech employees</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/code.png"/>
+  <br/><strong>Flying Pig Labs</strong>
+  <br/><small>Software Development</small>
+  <br/><code>Boutique consultancy</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/time.png"/>
+  <br/><strong>Hourly</strong>
+  <br/><small>HR Technology Platform</small>
+  <br/><code>Growing startup</code>
+</td>
+</tr>
+</table>
 
 ### 📍 Venues
-- **Common House** - Co-working & Events
-- **Startup Virginia** - Startup Incubator
-- **VCU Innovation Gateway** - Research Hub
-- **The Frontier Project** - Creative Co-working
+
+<table>
+<tr>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/home-office.png"/>
+  <br/><strong>Common House</strong>
+  <br/><small>Co-working & Events</small>
+  <br/><code>Downtown RVA</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/rocket.png"/>
+  <br/><strong>Startup Virginia</strong>
+  <br/><small>Startup Incubator</small>
+  <br/><code>Innovation Hub</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/university.png"/>
+  <br/><strong>VCU Innovation Gateway</strong>
+  <br/><small>Research Hub</small>
+  <br/><code>Academic Center</code>
+</td>
+<td align="center" width="25%">
+  <img src="https://img.icons8.com/color/64/creative.png"/>
+  <br/><strong>The Frontier Project</strong>
+  <br/><small>Creative Co-working</small>
+  <br/><code>Arts District</code>
+</td>
+</tr>
+</table>
+
+</div>
 
 ## 🛠️ Development
 
@@ -366,22 +615,69 @@ pre-commit install  # Optional: git hooks
 3. **API Endpoints**: Extend `lambda_handler.py`
 4. **CLI Commands**: Add to `cli.py`
 
-## 📚 References
+## 📚 References & Resources
 
-- [Strands SDK Documentation](https://github.com/aws/strands)
-- [Model Context Protocol Spec](https://modelcontextprotocol.org)
-- [DynamoDB MCP Server](https://registry.modelcontextprotocol.org)
-- [AWS ML Blog on MCP](https://aws.amazon.com/blogs/machine-learning/unlocking-the-power-of-mcp/)
-- [Claude API Documentation](https://docs.anthropic.com/claude/reference)
-- [AWS SAM Documentation](https://docs.aws.amazon.com/serverless-application-model/)
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="33%">
+  <img src="https://img.icons8.com/color/48/book.png"/>
+  <br/><strong>Documentation</strong>
+  <br/>
+  <a href="https://github.com/aws/strands">Strands SDK</a><br/>
+  <a href="https://modelcontextprotocol.org">MCP Specification</a><br/>
+  <a href="https://docs.anthropic.com/claude/reference">Claude API</a>
+</td>
+<td align="center" width="33%">
+  <img src="https://img.icons8.com/color/48/aws.png"/>
+  <br/><strong>AWS Resources</strong>
+  <br/>
+  <a href="https://registry.modelcontextprotocol.org">DynamoDB MCP Server</a><br/>
+  <a href="https://aws.amazon.com/blogs/machine-learning/unlocking-the-power-of-mcp/">AWS ML Blog</a><br/>
+  <a href="https://docs.aws.amazon.com/serverless-application-model/">SAM Documentation</a>
+</td>
+<td align="center" width="33%">
+  <img src="https://img.icons8.com/color/48/community.png"/>
+  <br/><strong>Community</strong>
+  <br/>
+  <a href="#-contributing">Contributing Guide</a><br/>
+  <a href="https://github.com/Flying-Pig-Labs/strands/issues">Report Issues</a><br/>
+  <a href="https://github.com/Flying-Pig-Labs/strands/discussions">Discussions</a>
+</td>
+</tr>
+</table>
+
+</div>
 
 ---
 
+<div align="center">
+
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+<img src="https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge" alt="MIT License"/>
 
-## 🏷️ Tags
+*This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.*
 
-`ai-agent` `mcp` `strands` `claude` `aws` `lambda` `dynamodb` `richmond` `virginia` `tech-meetups`
+## 🏷️ Topics
+
+<img src="https://img.shields.io/badge/AI-Agent-blue?style=flat-square"/> <img src="https://img.shields.io/badge/MCP-Protocol-purple?style=flat-square"/> <img src="https://img.shields.io/badge/Strands-SDK-orange?style=flat-square"/> <img src="https://img.shields.io/badge/Claude-3.5-violet?style=flat-square"/> <img src="https://img.shields.io/badge/AWS-Lambda-yellow?style=flat-square"/> <img src="https://img.shields.io/badge/DynamoDB-Database-red?style=flat-square"/> <img src="https://img.shields.io/badge/Richmond-VA-crimson?style=flat-square"/> <img src="https://img.shields.io/badge/Tech-Meetups-green?style=flat-square"/>
+
+---
+
+<p>
+  <strong>💡 Made with ❤️ for the Richmond Tech Community</strong>
+  <br/>
+  <em>Showcasing the power of AI agents, MCP, and AWS serverless architecture</em>
+</p>
+
+<p>
+  <a href="https://github.com/Flying-Pig-Labs/strands">⭐ Star this repo</a> •
+  <a href="https://github.com/Flying-Pig-Labs/strands/fork">🍴 Fork it</a> •
+  <a href="https://github.com/Flying-Pig-Labs/strands/issues">🐛 Report bugs</a> •
+  <a href="https://github.com/Flying-Pig-Labs/strands/pulls">🔄 Submit PRs</a>
+</p>
+
+</div>
 
