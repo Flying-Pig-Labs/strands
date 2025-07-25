@@ -37,5 +37,5 @@ ujson>=5.8.0                # Fast JSON parsing
 orjson>=3.9.0               # Fast JSON serialization
 
 # HTTP and CLI interface
-httpx>=0.25.0               # Modern HTTP client
+httpx               # Modern HTTP client
 rich>=13.0.0                # Rich terminal output

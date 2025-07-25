@@ -62,6 +62,7 @@ class RichmondAgent:
         self.anthropic_client = None
         self.mcp_client = None
         self.agent = None
+        self.use_mcp = os.getenv('USE_MCP', 'false').lower() == 'true'
         
     def initialize(self):
         """Initialize the agent with MCP tools and Claude model"""
@@ -73,20 +74,28 @@ class RichmondAgent:
             
             self.anthropic_client = Anthropic(api_key=api_key)
             
-            # Initialize MCP client for DynamoDB tools
-            self.mcp_client = MCPClient(
-                lambda: stdio_client(
-                    StdioServerParameters(
-                        command="uvx",
-                        args=["--from", "awslabs-dynamodb-mcp-server", "awslabs.dynamodb-mcp-server"],
-                        env={
-                            "AWS_REGION": self.config.aws_region,
-                            "AWS_PROFILE": os.getenv('AWS_PROFILE', 'personal'),
-                            "DYNAMODB_TABLE": self.config.dynamodb_table
-                        }
+            # Initialize MCP client for DynamoDB tools (skip in local mode due to network issues)
+            if self.use_mcp:
+                try:
+                    self.mcp_client = MCPClient(
+                        lambda: stdio_client(
+                            StdioServerParameters(
+                                command="uvx",
+                                args=["--from", "awslabs-dynamodb-mcp-server", "awslabs.dynamodb-mcp-server"],
+                                env={
+                                    "AWS_REGION": self.config.aws_region,
+                                    "AWS_PROFILE": os.getenv('AWS_PROFILE', 'personal'),
+                                    "DYNAMODB_TABLE": self.config.dynamodb_table
+                                }
+                            )
+                        )
                     )
-                )
-            )
+                    logger.info("MCP client initialized successfully")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize MCP client: {e}. Falling back to direct DynamoDB access.")
+                    self.use_mcp = False
+            else:
+                logger.info("MCP disabled, using direct DynamoDB access")
             
             # Configure Bedrock model with correct region
             model = BedrockModel(
@@ -100,21 +109,30 @@ class RichmondAgent:
                 }
             )
             
-            # Initialize Strands agent with MCP tools
-            with self.mcp_client:
-                tools = self.mcp_client.list_tools_sync()
+            # Initialize Strands agent with or without MCP tools
+            if self.use_mcp and self.mcp_client:
+                with self.mcp_client:
+                    tools = self.mcp_client.list_tools_sync()
+                    self.agent = Agent(
+                        model=model,
+                        tools=tools,
+                        system_prompt=self._get_system_prompt()
+                    )
+                    if tools:
+                        tool_names = [tool.tool_name for tool in tools]
+                        logger.info(f"Available tools ({len(tools)}): {tool_names[:5]}...")
+                    else:
+                        logger.info("No tools available")
+            else:
+                # Initialize without MCP tools - agent will use direct Anthropic API
                 self.agent = Agent(
                     model=model,
-                    tools=tools,
+                    tools=[],
                     system_prompt=self._get_system_prompt()
                 )
+                logger.info("Agent initialized without MCP tools")
             
             logger.info("Richmond Agent initialized successfully")
-            if tools:
-                tool_names = [tool.tool_name for tool in tools]
-                logger.info(f"Available tools ({len(tools)}): {tool_names[:5]}...")
-            else:
-                logger.info("No tools available")
             
         except Exception as e:
             logger.error(f"Failed to initialize agent: {e}")
@@ -123,7 +141,8 @@ class RichmondAgent:
     
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the Richmond AI agent"""
-        return """
+        if self.use_mcp:
+            return """
 You are a helpful AI assistant specializing in Richmond, Virginia information. 
 You have access to a DynamoDB database containing local Richmond data including:
 - Tech meetups and events
@@ -154,6 +173,30 @@ be honest about the limitations and suggest general Richmond resources.
 
 Focus on being helpful, accurate, and Richmond-focused in all responses.
 """
+        else:
+            return """
+You are a helpful AI assistant specializing in Richmond, Virginia (RVA) information. 
+You have knowledge about the Richmond tech community including:
+- Tech meetups and events
+- Local companies and startups  
+- Venues and locations
+- Community resources
+
+When someone asks about Richmond or RVA:
+- Provide helpful information about the local tech scene
+- Be conversational and enthusiastic about Richmond
+- If you don't have specific current data, provide general helpful information
+- Suggest popular Richmond tech resources like RVA Tech Slack, local meetup groups, etc.
+
+For meetup questions, mention popular Richmond tech meetups like:
+- RVA.js (JavaScript meetup)
+- Richmond AWS User Group
+- Richmond Data Science meetup
+- Women in Technology Richmond
+- And others in the vibrant Richmond tech community
+
+Be helpful, accurate, and Richmond-focused in all responses.
+"""
     
     def process_query(self, request: QueryRequest) -> AgentResponse:
         """Process a user query and return response"""
@@ -163,14 +206,17 @@ Focus on being helpful, accurate, and Richmond-focused in all responses.
             
             logger.info(f"Processing query: {request.query}")
             
-            # Process the query with the agent using MCP context
-            with self.mcp_client:
+            # Process the query with the agent
+            if self.use_mcp and self.mcp_client:
+                with self.mcp_client:
+                    result = self.agent(request.query)
+            else:
                 result = self.agent(request.query)
             
             # Build response (Strands typically returns a simple string)
             response = AgentResponse(
                 response=str(result),
-                tools_used=['dynamodb_mcp_tools'],  # MCP tools were used if available
+                tools_used=['dynamodb_mcp_tools'] if self.use_mcp else ['direct_dynamodb'],
                 metadata={
                     'model': self.config.model_name,
                     'query_length': len(request.query)

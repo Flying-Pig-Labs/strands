@@ -30,13 +30,15 @@ console = Console()
 
 # Default API endpoint (can be overridden)
 DEFAULT_API_ENDPOINT = "https://your-api-gateway-url.amazonaws.com/prod"
+# Set LOCAL_MODE_DEFAULT to True to run locally by default
+LOCAL_MODE_DEFAULT = True
 
 # CLI configuration
 class CLIConfig:
     def __init__(self):
         self.api_endpoint = os.getenv('RICHMOND_AGENT_API', DEFAULT_API_ENDPOINT)
         self.timeout = 30
-        self.local_mode = False
+        self.local_mode = LOCAL_MODE_DEFAULT
         self.debug = False
 
 
@@ -58,7 +60,12 @@ def cli(ctx, api_endpoint, local, debug):
     config = CLIConfig()
     if api_endpoint:
         config.api_endpoint = api_endpoint
-    config.local_mode = local
+    # Override local mode if --local flag is provided
+    if local:
+        config.local_mode = True
+    # If API endpoint is set to non-default, switch to API mode unless --local is explicit
+    elif api_endpoint and api_endpoint != DEFAULT_API_ENDPOINT:
+        config.local_mode = False
     config.debug = debug
     
     # Setup logging
