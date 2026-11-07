@@ -1,0 +1,94 @@
+[
+  {
+    "id": "venue_startup_va",
+    "name": "Startup Virginia",
+    "address": "1717 E Cary St, Richmond, VA 23223",
+    "type": "coworking_space",
+    "capacity": 150,
+    "amenities": [
+      "wifi",
+      "parking",
+      "kitchen",
+      "presentation_screen"
+    ],
+    "contact": {
+      "phone": "(804) 644-2476",
+      "email": "info@startupvirginia.org",
+      "website": "https://startupvirginia.org"
+    },
+    "description": "Richmond's premier startup incubator and coworking space"
+  },
+  {
+    "id": "venue_common_house",
+    "name": "Common House",
+    "address": "305 W Broad St, Richmond, VA 23220",
+    "type": "event_space",
+    "capacity": 200,
+    "amenities": [
+      "wifi",
+      "valet_parking",
+      "catering",
+      "av_equipment"
+    ],
+    "contact": {
+      "phone": "(804) 612-1900",
+      "email": "events@commonhouserichmond.com",
+      "website": "https://commonhouserichmond.com"
+    },
+    "description": "Upscale event venue in downtown Richmond"
+  },
+  {
+    "id": "venue_vcu_engineering",
+    "name": "VCU School of Engineering",
+    "address": "401 W Main St, Richmond, VA 23284",
+    "type": "university",
+    "capacity": 300,
+    "amenities": [
+      "wifi",
+      "parking",
+      "presentation_equipment",
+      "recording"
+    ],
+    "contact": {
+      "phone": "(804) 828-3565",
+      "email": "engineering@vcu.edu",
+      "website": "https://egr.vcu.edu"
+    },
+    "description": "VCU's engineering school with modern tech facilities"
+  },
+  {
+    "id": "venue_capital_one_cafe",
+    "name": "Capital One Caf\u00e9",
+    "address": "11800 W Broad St, Richmond, VA 23233",
+    "type": "cafe",
+    "capacity": 50,
+    "amenities": [
+      "wifi",
+      "coffee",
+      "casual_seating"
+    ],
+    "contact": {
+      "phone": "(804) 360-3780",
+      "website": "https://www.capitalone.com/local/richmond"
+    },
+    "description": "Modern caf\u00e9 space for casual tech meetups"
+  },
+  {
+    "id": "venue_libbie_mill",
+    "name": "Libbie Mill Library",
+    "address": "2100 Libbie Lake E St, Richmond, VA 23230",
+    "type": "library",
+    "capacity": 80,
+    "amenities": [
+      "wifi",
+      "parking",
+      "quiet_spaces",
+      "group_rooms"
+    ],
+    "contact": {
+      "phone": "(804) 501-5136",
+      "website": "https://henrico.lib.va.us"
+    },
+    "description": "Modern library with excellent tech facilities"
+  }
+]

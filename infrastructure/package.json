@@ -1,0 +1,38 @@
+{
+  "name": "strands-richmond-demo-infrastructure",
+  "version": "1.0.0",
+  "description": "CDK infrastructure for Richmond MCP + Strands AI Agent Demo",
+  "main": "bin/strands-demo.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "deploy": "npm run build && cdk deploy --profile personal",
+    "diff": "npm run build && cdk diff --profile personal",
+    "synth": "npm run build && cdk synth --profile personal",
+    "destroy": "cdk destroy --profile personal"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "@types/node": "20.1.0",
+    "aws-cdk": "2.100.0",
+    "jest": "^29.4.0",
+    "ts-jest": "^29.0.5",
+    "typescript": "~5.0.2"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "2.100.0",
+    "constructs": "^10.0.0"
+  },
+  "keywords": [
+    "cdk",
+    "aws",
+    "strands",
+    "mcp",
+    "richmond",
+    "ai-agent"
+  ],
+  "author": "DevOps Engineer",
+  "license": "MIT"
+}

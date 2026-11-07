@@ -1,0 +1,321 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Richmond AI Agent - MCP + Strands Demo'
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+    Environment:
+      Variables:
+        POWERTOOLS_SERVICE_NAME: richmond-agent
+        POWERTOOLS_METRICS_NAMESPACE: RichmondAgent
+        LOG_LEVEL: INFO
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    Description: Deployment stage
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+
+  AnthropicApiKey:
+    Type: String
+    NoEcho: true
+    Description: Anthropic API key for Claude integration
+    Default: ""
+
+  ModelName:
+    Type: String
+    Default: claude-3-5-sonnet-20241022
+    Description: Claude model to use
+
+Resources:
+  # DynamoDB Table for Richmond data
+  RichmondDataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'richmond-data-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        - AttributeName: date
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: type-date-index
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: date
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Project
+          Value: RichmondAgent
+        - Key: Stage
+          Value: !Ref Stage
+
+  # Lambda function for the agent
+  RichmondAgentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'richmond-agent-${Stage}'
+      CodeUri: .
+      Handler: lambda_handler.lambda_handler
+      Description: 'Richmond AI Agent with MCP and Strands integration'
+      Timeout: 60
+      MemorySize: 1024
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref RichmondDataTable
+          AWS_REGION: !Ref AWS::Region
+          STAGE: !Ref Stage
+          MODEL_NAME: !Ref ModelName
+          ANTHROPIC_API_KEY: !Ref AnthropicApiKey
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RichmondDataTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/richmond-agent-${Stage}:*'
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+                - bedrock:InvokeModelWithResponseStream
+              Resource: '*'
+      Events:
+        ApiGatewayAsk:
+          Type: Api
+          Properties:
+            RestApiId: !Ref RichmondAgentApi
+            Path: /ask
+            Method: post
+        ApiGatewayHealth:
+          Type: Api
+          Properties:
+            RestApiId: !Ref RichmondAgentApi
+            Path: /health
+            Method: get
+        ApiGatewayRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref RichmondAgentApi
+            Path: /
+            Method: get
+        ApiGatewayCors:
+          Type: Api
+          Properties:
+            RestApiId: !Ref RichmondAgentApi
+            Path: /{proxy+}
+            Method: options
+
+  # API Gateway
+  RichmondAgentApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub 'richmond-agent-api-${Stage}'
+      StageName: !Ref Stage
+      Description: 'API Gateway for Richmond AI Agent'
+      Cors:
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+              Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: >
+          {
+            "requestId":"$context.requestId",
+            "requestTime":"$context.requestTime",
+            "httpMethod":"$context.httpMethod",
+            "resourcePath":"$context.resourcePath",
+            "status":"$context.status",
+            "error.message":"$context.error.message",
+            "error.messageString":"$context.error.messageString",
+            "responseLength":"$context.responseLength",
+            "responseLatency":"$context.responseLatency",
+            "sourceIp":"$context.identity.sourceIp",
+            "userAgent":"$context.identity.userAgent"
+          }
+      TracingConfig:
+        TracingEnabled: true
+      Tags:
+        Project: RichmondAgent
+        Stage: !Ref Stage
+
+  # CloudWatch Log Group for API Gateway
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/apigateway/richmond-agent-${Stage}'
+      RetentionInDays: 14
+
+  # CloudWatch Log Group for Lambda
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/richmond-agent-${Stage}'
+      RetentionInDays: 14
+
+  # Lambda function for loading sample data
+  DataLoaderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'richmond-data-loader-${Stage}'
+      CodeUri: .
+      Handler: load_sample_data.lambda_handler
+      Description: 'Load sample Richmond data into DynamoDB'
+      Timeout: 60
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref RichmondDataTable
+          AWS_REGION: !Ref AWS::Region
+          STAGE: !Ref Stage
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RichmondDataTable
+
+  # Custom Resource to trigger data loading
+  LoadSampleData:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt DataLoaderFunction.Arn
+    DependsOn:
+      - RichmondDataTable
+      - DataLoaderFunction
+
+  # CloudWatch Dashboard
+  RichmondAgentDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub 'RichmondAgent-${Stage}'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/Lambda", "Invocations", "FunctionName", "${RichmondAgentFunction}" ],
+                  [ ".", "Errors", ".", "." ],
+                  [ ".", "Duration", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Lambda Metrics",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 12,
+              "y": 0,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/ApiGateway", "Count", "ApiName", "${RichmondAgentApi}" ],
+                  [ ".", "4XXError", ".", "." ],
+                  [ ".", "5XXError", ".", "." ],
+                  [ ".", "Latency", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "API Gateway Metrics",
+                "period": 300
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 6,
+              "width": 24,
+              "height": 6,
+              "properties": {
+                "metrics": [
+                  [ "AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", "${RichmondDataTable}" ],
+                  [ ".", "ConsumedWriteCapacityUnits", ".", "." ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "DynamoDB Metrics",
+                "period": 300
+              }
+            }
+          ]
+        }
+
+Outputs:
+  ApiGatewayUrl:
+    Description: 'API Gateway endpoint URL'
+    Value: !Sub 'https://${RichmondAgentApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+    Export:
+      Name: !Sub '${AWS::StackName}-ApiUrl'
+
+  DynamoDBTableName:
+    Description: 'DynamoDB table name'
+    Value: !Ref RichmondDataTable
+    Export:
+      Name: !Sub '${AWS::StackName}-TableName'
+
+  LambdaFunctionName:
+    Description: 'Lambda function name'
+    Value: !Ref RichmondAgentFunction
+    Export:
+      Name: !Sub '${AWS::StackName}-FunctionName'
+
+  DashboardUrl:
+    Description: 'CloudWatch Dashboard URL'
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=${RichmondAgentDashboard}'
+
+  TestCommand:
+    Description: 'Test command for CLI'
+    Value: !Sub |
+      python cli.py --api-endpoint https://${RichmondAgentApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage} ask "What's the next tech meetup in Richmond?"
+
+  SampleCurlCommand:
+    Description: 'Sample curl command to test the API'
+    Value: !Sub |
+      curl -X POST https://${RichmondAgentApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/ask \
+        -H "Content-Type: application/json" \
+        -d '{"query": "What tech meetups are happening in Richmond this week?"}'
